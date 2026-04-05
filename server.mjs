@@ -252,8 +252,8 @@ function pickVoice(language) {
 function pickSpeed(language) {
   const rawValue =
     language === "es"
-      ? process.env.OPENAI_TTS_SPEED_ES ?? "0.98"
-      : process.env.OPENAI_TTS_SPEED_EN ?? "0.94";
+      ? process.env.OPENAI_TTS_SPEED_ES ?? "0.92"
+      : process.env.OPENAI_TTS_SPEED_EN ?? "0.88";
   const parsed = Number(rawValue);
 
   if (!Number.isFinite(parsed)) {
@@ -265,10 +265,10 @@ function pickSpeed(language) {
 
 function buildVoiceInstructions(language) {
   if (language === "es") {
-    return "Habla con calidez y naturalidad. Suena como una guia humana paciente y cercana. Evita la cadencia tipica de asistente virtual o centro de llamadas.";
+    return "Habla como una persona real, no como un asistente virtual. Usa un ritmo conversacional con pausas naturales entre ideas. Enfatiza suavemente las palabras clave. Suena como una vecina amable que conoce bien los beneficios y quiere ayudar de verdad. Evita completamente la cadencia plana de centro de llamadas o asistente de voz. Varia tu entonacion de forma organica, como lo harias en una conversacion cara a cara.";
   }
 
-  return "Speak warmly and naturally. Sound like a calm human guide helping someone with benefits. Avoid a robotic assistant cadence or call-center energy.";
+  return "Speak like a real person, not a voice assistant. Use a conversational rhythm with natural pauses between ideas. Gently emphasize key words. Sound like a knowledgeable neighbor who genuinely wants to help someone navigate benefits — warm, unhurried, and human. Never use a flat call-center cadence. Let your intonation rise and fall organically, the way it would in a real face-to-face conversation. Take brief natural pauses after commas and before important information.";
 }
 
 async function createElevenLabsSpeech(text, language) {
@@ -292,9 +292,9 @@ async function createElevenLabsSpeech(text, language) {
       model_id: modelId,
       language_code: language,
       voice_settings: {
-        similarity_boost: 0.82,
-        stability: 0.42,
-        style: 0.28,
+        similarity_boost: 0.80,
+        stability: 0.32,
+        style: 0.40,
         use_speaker_boost: true,
       },
     }),

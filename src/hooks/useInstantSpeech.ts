@@ -229,8 +229,8 @@ export function useInstantSpeech() {
 
       const utterance = new SpeechSynthesisUtterance(normalizeSpokenText(normalizedText));
       utterance.lang = language === "es" ? "es-US" : "en-US";
-      utterance.rate = language === "es" ? 0.91 : 0.94;
-      utterance.pitch = language === "es" ? 1.02 : 1.01;
+      utterance.rate = language === "es" ? 0.87 : 0.88;
+      utterance.pitch = language === "es" ? 1.04 : 1.02;
       utterance.volume = 1;
       utterance.voice = selectVoice(language);
       window.speechSynthesis.speak(utterance);
