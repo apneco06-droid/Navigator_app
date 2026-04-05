@@ -203,6 +203,26 @@ small,
   gap: 12px;
 }
 
+.debug-toggle-row {
+  margin-top: 12px;
+}
+
+.debug-toggle-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #8899a6);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.debug-toggle-label input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--accent, #5ab4c5);
+}
+
 .benefit-card,
 .apply-card,
 .draft-section,

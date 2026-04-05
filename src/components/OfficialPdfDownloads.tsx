@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { MatchResult, IntakeForm as IntakeFormValue } from "../lib/matching";
 import {
-  generateTexasH1010MrPdf,
-  generateTexasH1010Pdf,
+  generateTexasH1010MrPdfPair,
+  generateTexasH1010PdfPair,
 } from "../lib/officialTexasPdfs";
 
 interface OfficialPdfDownloadsProps {
@@ -13,6 +13,8 @@ interface OfficialPdfDownloadsProps {
 export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsProps) {
   const [isGeneratingMain, setIsGeneratingMain] = useState(false);
   const [isGeneratingMedical, setIsGeneratingMedical] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+
   const texasMatches = matches.filter(({ program }) =>
     ["snap", "tanf", "medicaid", "chip"].includes(program.id),
   );
@@ -27,8 +29,12 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
   async function handleDownloadMain() {
     try {
       setIsGeneratingMain(true);
-      const pdfBytes = await generateTexasH1010Pdf(intake, texasMatches);
-      downloadPdf(pdfBytes, `${safeName(intake)}-texas-benefits-h1010.pdf`);
+      const pair = await generateTexasH1010PdfPair(intake, texasMatches);
+      const base = safeName(intake);
+      if (debugMode) {
+        downloadPdf(pair.preview, `${base}-texas-h1010-DEBUG.pdf`);
+      }
+      downloadPdf(pair.final, `${base}-texas-benefits-h1010.pdf`);
     } finally {
       setIsGeneratingMain(false);
     }
@@ -37,8 +43,12 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
   async function handleDownloadMedical() {
     try {
       setIsGeneratingMedical(true);
-      const pdfBytes = await generateTexasH1010MrPdf(intake);
-      downloadPdf(pdfBytes, `${safeName(intake)}-texas-benefits-h1010-mr.pdf`);
+      const pair = await generateTexasH1010MrPdfPair(intake);
+      const base = safeName(intake);
+      if (debugMode) {
+        downloadPdf(pair.preview, `${base}-texas-h1010-mr-DEBUG.pdf`);
+      }
+      downloadPdf(pair.final, `${base}-texas-benefits-h1010-mr.pdf`);
     } finally {
       setIsGeneratingMedical(false);
     }
@@ -51,8 +61,8 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
         <h2>{intake.language === "es" ? "Descargar formularios llenados" : "Download filled forms"}</h2>
         <p>
           {intake.language === "es"
-            ? "Estos botones descargan los formularios oficiales de Texas ya llenados con los datos del usuario."
-            : "These buttons download the official Texas forms prefilled with the user's information."}
+            ? "Formularios oficiales de Texas ya llenados con los datos del usuario."
+            : "Official Texas forms prefilled with the applicant's information."}
         </p>
       </div>
 
@@ -88,6 +98,21 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
                 : "Download filled H1010-MR"}
           </button>
         ) : null}
+      </div>
+
+      <div className="debug-toggle-row">
+        <label className="debug-toggle-label">
+          <input
+            type="checkbox"
+            checked={debugMode}
+            onChange={(e) => setDebugMode(e.target.checked)}
+          />
+          <span>
+            {intake.language === "es"
+              ? "Modo de calibración: también descarga el PDF con bordes de campo visibles"
+              : "Calibration mode: also download the PDF with visible field borders"}
+          </span>
+        </label>
       </div>
     </section>
   );
