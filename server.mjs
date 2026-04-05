@@ -246,7 +246,7 @@ function pickVoice(language) {
     return process.env.OPENAI_TTS_VOICE_ES ?? "sage";
   }
 
-  return process.env.OPENAI_TTS_VOICE_EN ?? "coral";
+  return process.env.OPENAI_TTS_VOICE_EN ?? "ash";
 }
 
 function pickSpeed(language) {

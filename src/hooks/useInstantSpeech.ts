@@ -256,12 +256,38 @@ function scoreVoice(voice: BrowserVoice, language: SupportedLanguage) {
     "premium",
     "natural",
     "neural",
-    "siri",
   ];
-  const roboticMarkers = ["compact", "novelty", "ting", "zarvox", "boing"];
+  const roboticMarkers = ["compact", "novelty", "ting", "zarvox", "boing", "siri", "fred", "trinoids", "samantha", "victoria", "alex"];
 
-  const preferredEnglish = ["samantha", "ava", "allison", "karen", "daniel", "google us english"];
-  const preferredSpanish = ["monica", "paulina", "soledad", "jorge", "google español", "google spanish"];
+  // Human-sounding voices — ordered by naturalness preference
+  const preferredEnglish = [
+    "aria",
+    "jenny",
+    "guy",
+    "michelle",
+    "davis",
+    "tony",
+    "jane",
+    "jason",
+    "nancy",
+    "google us english female",
+    "google us english",
+    "ava",
+    "allison",
+    "karen",
+    "daniel",
+  ];
+  const preferredSpanish = [
+    "lupe",
+    "dalia",
+    "jorge (enhanced)",
+    "paulina",
+    "monica",
+    "soledad",
+    "jorge",
+    "google español",
+    "google spanish",
+  ];
 
   if (language === "en" && lang.startsWith("en-us")) {
     score += 20;
@@ -283,11 +309,19 @@ function scoreVoice(voice: BrowserVoice, language: SupportedLanguage) {
     score += 4;
   }
 
-  if (language === "en" && preferredEnglish.some((marker) => name.includes(marker))) {
+  // Top-tier human voices get a bigger boost
+  const topEnglish = ["aria", "jenny", "michelle", "ava", "allison (enhanced)", "ava (enhanced)"];
+  const topSpanish = ["lupe", "dalia", "paulina (enhanced)", "monica (enhanced)"];
+
+  if (language === "en" && topEnglish.some((marker) => name.includes(marker))) {
+    score += 36;
+  } else if (language === "en" && preferredEnglish.some((marker) => name.includes(marker))) {
     score += 24;
   }
 
-  if (language === "es" && preferredSpanish.some((marker) => name.includes(marker))) {
+  if (language === "es" && topSpanish.some((marker) => name.includes(marker))) {
+    score += 36;
+  } else if (language === "es" && preferredSpanish.some((marker) => name.includes(marker))) {
     score += 24;
   }
 
