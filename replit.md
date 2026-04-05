@@ -1,32 +1,44 @@
-# Navigator App
+# Navigator Benefits
 
 ## Overview
-A React + TypeScript + Vite web application bootstrapped from a fresh GitHub import.
+A bilingual (English/Spanish) Texas benefits intake and printable application assistant for border communities. Helps users identify eligible programs and prepare application packets.
 
 ## Architecture
 
-- **Frontend**: React 18 with TypeScript, built with Vite
-- **Routing**: React Router v6
-- **Port**: 5000 (development)
+- **Frontend**: React 18 + TypeScript, built with Vite
+- **Server**: Custom Node.js server (`server.mjs`) running Vite in middleware mode for dev, static file serving for production preview
+- **TTS**: `/api/tts` endpoint supports ElevenLabs or OpenAI for voice narration
+- **Port**: 5000 (Replit), 5173 (original default)
 
 ## Project Structure
 
 ```
 /
 ├── src/
-│   ├── main.tsx       # App entry point
-│   ├── App.tsx        # Root component with routing
-│   ├── App.css        # App-level styles
-│   └── index.css      # Global styles
-├── index.html         # HTML template
-├── vite.config.ts     # Vite configuration (host: 0.0.0.0, port: 5000)
-├── tsconfig.json      # TypeScript config
-└── package.json       # Dependencies and scripts
+│   ├── App.tsx                  # Root component (intake state, stage routing)
+│   ├── main.tsx                 # Entry point
+│   ├── styles.css               # Global styles
+│   ├── components/              # UI components (ConversationGuide, ProgramMatches, etc.)
+│   ├── data/                    # programs.ts, eligibilityRules.ts
+│   ├── hooks/                   # useInstantSpeech, useSpeechRecognition
+│   └── lib/                     # matching.ts, officialTexasPdfs.ts, applicationDrafts.ts, packetTemplates.ts
+├── public/
+│   └── forms/                   # H1010 PDF forms
+├── server.mjs                   # Custom Node.js dev/preview server with TTS proxy
+├── vite.config.ts               # Vite config (allowedHosts: true for Replit proxy)
+├── navigator-programs.json      # Program data
+└── package.json
 ```
+
+## Environment Variables
+
+See `.env.example`. TTS features require either:
+- `ELEVENLABS_API_KEY` (preferred)
+- `OPENAI_API_KEY`
 
 ## Development
 
-- **Run**: `npm run dev` (starts on 0.0.0.0:5000)
+- **Run**: `PORT=5000 HOST=0.0.0.0 node server.mjs`
 - **Build**: `npm run build`
 
 ## Deployment

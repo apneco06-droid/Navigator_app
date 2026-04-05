@@ -1,23 +1,23 @@
 {
-  "name": "navigator-app",
-  "version": "0.1.0",
+  "name": "navigator-benefits",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5000",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "node server.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "node server.mjs --preview"
   },
   "dependencies": {
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.10"
   }
 }

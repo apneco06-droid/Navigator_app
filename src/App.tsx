@@ -1,31 +1,193 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
-import './App.css'
+import { useMemo, useState } from "react";
+import { ApplyNow } from "./components/ApplyNow";
+import { ConversationGuide } from "./components/ConversationGuide";
+import { OfficialFormDetails } from "./components/OfficialFormDetails";
+import { OfficialPdfDownloads } from "./components/OfficialPdfDownloads";
+import { PrintPacket } from "./components/PrintPacket";
+import { ProgramMatches } from "./components/ProgramMatches";
+import { programs } from "./data/programs";
+import { useInstantSpeech } from "./hooks/useInstantSpeech";
+import {
+  IntakeForm as IntakeFormValue,
+  buildAssistantSummary,
+  buildResultsNarration,
+  matchPrograms,
+} from "./lib/matching";
 
-function Home() {
-  return (
-    <div className="page">
-      <h1>Navigator App</h1>
-      <p>Welcome to your new application. Start building something great!</p>
-    </div>
-  )
-}
+const initialState: IntakeFormValue = {
+  language: "en",
+  firstName: "",
+  lastName: "",
+  middleName: "",
+  city: "El Paso",
+  region: "texas",
+  ageBand: "18-64",
+  householdSize: "1",
+  monthlyIncomeBand: "1000-2000",
+  hasDisability: false,
+  pregnantOrPostpartum: false,
+  childrenUnder5: false,
+  childrenUnder19: false,
+  needsHousingHelp: false,
+  needsUtilityHelp: false,
+  skipSensitiveInfo: true,
+  address: "",
+  phone: "",
+  cellPhone: "",
+  email: "",
+  zipCode: "",
+  county: "",
+  dateOfBirth: "",
+  socialSecurityNumber: "",
+  spouseName: "",
+  plansToFileTaxes: "",
+  filesJointly: "",
+  claimsDependents: "",
+  dependentNames: "",
+  claimedAsDependent: "",
+  taxFilerName: "",
+  taxRelationship: "",
+  isVeteran: false,
+  isActiveDuty: false,
+  needsInterviewHelp: false,
+  interviewHelpDetails: "",
+  interviewLanguage: "",
+  needsInterpreter: false,
+  interpreterLanguage: "",
+  preferredContactMethod: "",
+  notes: "",
+};
 
 function App() {
+  const [intake, setIntake] = useState(initialState);
+  const [stage, setStage] = useState<"guide" | "results" | "apply">("guide");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [printTarget, setPrintTarget] = useState<string | "all">("all");
+  const { speak } = useInstantSpeech();
+
+  const matches = useMemo(() => matchPrograms(intake, programs), [intake]);
+  const assistantSummary = useMemo(
+    () => buildAssistantSummary(intake, matches.length),
+    [intake, matches.length],
+  );
+
+  function updateField<Key extends keyof IntakeFormValue>(
+    key: Key,
+    nextValue: IntakeFormValue[Key],
+  ) {
+    setIntake((current) => {
+      const nextState = {
+        ...current,
+        [key]: nextValue,
+      };
+
+      if (key === "childrenUnder5" && nextValue === true) {
+        nextState.childrenUnder19 = true;
+      }
+
+      return nextState;
+    });
+  }
+
+  function handleSubmit() {
+    setStage("results");
+    speak(buildResultsNarration(intake, matches), intake.language);
+  }
+
+  function handleGuideAnswer<Key extends keyof IntakeFormValue>(
+    key: Key,
+    value: IntakeFormValue[Key],
+  ) {
+    updateField(key, value);
+  }
+
+  function handleNextStep() {
+    setCurrentStep((current) => current + 1);
+  }
+
+  function handleBackStep() {
+    setCurrentStep((current) => Math.max(current - 1, 0));
+  }
+
+  function handleStartApplication() {
+    setStage("apply");
+    speak(
+      intake.language === "es"
+        ? "Voy a preparar los borradores de solicitud. Despues puedes elegir imprimir un PDF o continuar por la ruta oficial en linea."
+        : "I am preparing the application drafts. Next you can choose between a printable PDF and the official online route.",
+      intake.language,
+    );
+  }
+
   return (
-    <BrowserRouter>
-      <nav className="navbar">
-        <div className="nav-brand">Navigator</div>
-        <div className="nav-links">
-          <Link to="/">Home</Link>
-        </div>
-      </nav>
-      <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
+    <div className="app-shell">
+      <main className="mobile-shell">
+        <header className="mobile-header">
+          <span className="eyebrow">Navigator</span>
+          <h1>{intake.language === "es" ? "Ayuda con beneficios" : "Benefits help"}</h1>
+          <p>
+            {intake.language === "es"
+              ? "Flujo bilingue con voz mas rapida, aplicaciones preparadas y paquete imprimible por beneficio."
+              : "Bilingual flow with faster voice, prepared applications, and a printable packet for each benefit."}
+          </p>
+          <p className="voice-disclosure">
+            {intake.language === "es"
+              ? "La voz es generada por IA, no una grabacion humana."
+              : "Voice audio is AI-generated, not a human recording."}
+          </p>
+        </header>
+
+        {stage === "guide" ? (
+          <ConversationGuide
+            intake={intake}
+            currentStep={currentStep}
+            onAnswer={handleGuideAnswer}
+            onBack={handleBackStep}
+            onNext={handleNextStep}
+            onFinish={handleSubmit}
+            onSpeak={(text) => speak(text, intake.language)}
+          />
+        ) : null}
+
+        {stage === "results" ? (
+          <section className="panel mobile-panel">
+            <div className="section-heading">
+              <span className="eyebrow">{intake.language === "es" ? "Resultados" : "Results"}</span>
+              <h2>{intake.language === "es" ? "Beneficios encontrados" : "Benefits found"}</h2>
+              <p>{assistantSummary}</p>
+            </div>
+
+            <ProgramMatches matches={matches.slice(0, 4)} language={intake.language} />
+
+            <div className="apply-question">
+              <h3>
+                {intake.language === "es"
+                  ? "Quieres que prepare las solicitudes ahora?"
+                  : "Would you like me to prepare the applications now?"}
+              </h3>
+              <div className="apply-actions">
+                <button className="primary-button" type="button" onClick={handleStartApplication}>
+                  {intake.language === "es" ? "Si, aplicar ahora" : "Yes, apply now"}
+                </button>
+                <button className="secondary-button" type="button" onClick={() => setStage("guide")}>
+                  {intake.language === "es" ? "Cambiar respuestas" : "Change answers"}
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {stage === "apply" ? (
+          <>
+            <OfficialFormDetails intake={intake} onChange={handleGuideAnswer} />
+            <OfficialPdfDownloads intake={intake} matches={matches} />
+            <ApplyNow intake={intake} matches={matches} onPreparePrint={setPrintTarget} />
+            <PrintPacket intake={intake} matches={matches} printTarget={printTarget} />
+          </>
+        ) : null}
       </main>
-    </BrowserRouter>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
