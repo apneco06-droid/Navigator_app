@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { buildApplicationDrafts } from "../lib/applicationDrafts";
 import { MatchResult, IntakeForm as IntakeFormValue } from "../lib/matching";
-import { hasTexasBenefitsPaperForm } from "./TexasBenefitsForms";
 
 interface ApplyNowProps {
   intake: IntakeFormValue;
@@ -17,8 +16,6 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
     () => buildApplicationDrafts(intake, matches),
     [intake, matches],
   );
-  const showTexasPaperForms = hasTexasBenefitsPaperForm(matches);
-
   function handleOnline(programId: string, url: string) {
     setDeliveryMode("online");
     window.open(url, "_blank", "noopener,noreferrer");
@@ -37,21 +34,14 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
         <span className="eyebrow">{intake.language === "es" ? "Aplicar ahora" : "Apply now"}</span>
         <h2>
           {intake.language === "es"
-            ? "Borradores de solicitud por beneficio"
-            : "Benefit-by-benefit application drafts"}
+            ? "Solicitudes por beneficio"
+            : "Applications by benefit"}
         </h2>
         <p>
           {intake.language === "es"
-            ? "Estos borradores usan la informacion del intake, explican por que cada beneficio encaja y te dejan elegir entre descargar el PDF llenado o continuar por la ruta oficial."
-            : "These drafts use the intake information, explain why each benefit fits, and let you choose between downloading the filled PDF or continuing through the official route."}
+            ? "Elige el portal oficial o descarga el PDF prellenado para cada beneficio."
+            : "Choose the official portal or download a prefilled PDF for each benefit."}
         </p>
-        {showTexasPaperForms ? (
-          <p>
-            {intake.language === "es"
-              ? "Para SNAP, TANF, Medicaid y CHIP de Texas, el paquete ahora incluye el formulario H1010 prellenado en lugar de solo mandar al enlace."
-              : "For Texas SNAP, TANF, Medicaid, and CHIP, the packet now includes a filled H1010 paper form instead of only sending the user to the link."}
-          </p>
-        ) : null}
       </div>
 
       <div className="delivery-toggle" role="tablist" aria-label="Delivery mode">
@@ -83,10 +73,7 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
             </div>
 
             <p className="benefit-copy">{draft.summary}</p>
-            <p className="office-copy">
-              {intake.language === "es" ? "Regla base: " : "Basic rule: "}
-              {draft.eligibility}
-            </p>
+            <p className="office-copy">{draft.eligibility}</p>
             <p className="office-copy">{draft.actionHint}</p>
 
             <div className="draft-sections">

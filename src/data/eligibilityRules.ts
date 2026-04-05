@@ -359,4 +359,116 @@ export const eligibilityRules: Record<string, EligibilityRuleData> = {
       text("Notes about needed care", "Notas sobre la atencion necesaria"),
     ],
   },
+  htw: {
+    score: (intake) =>
+      intake.region === "texas" &&
+      intake.ageBand === "18-64" &&
+      !intake.pregnantOrPostpartum &&
+      (intake.monthlyIncomeBand === "under-1000" ||
+        intake.monthlyIncomeBand === "1000-2000" ||
+        intake.monthlyIncomeBand === "2000-3500")
+        ? 0.85
+        : 0,
+    reasons: (intake) => [
+      text(
+        "Healthy Texas Women covers family planning and preventive care for women 15–44 not on Medicaid.",
+        "Healthy Texas Women cubre planificacion familiar y atencion preventiva para mujeres de 15 a 44 sin Medicaid.",
+      ),
+      intake.monthlyIncomeBand !== "3500-plus"
+        ? text(
+            "Income estimate falls within the 200% FPL limit for this program.",
+            "El ingreso estimado esta dentro del limite del 200% FPL para este programa.",
+          )
+        : text(
+            "Income may be close to the program limit — worth checking eligibility.",
+            "El ingreso puede estar cerca del limite — vale la pena verificar la elegibilidad.",
+          ),
+    ],
+    documentsNeeded: [
+      text("Photo ID", "Identificacion con foto"),
+      text("Proof of income", "Comprobante de ingresos"),
+      text("Proof of address", "Comprobante de domicilio"),
+    ],
+  },
+  cshcn: {
+    score: (intake) =>
+      intake.region === "texas" &&
+      intake.hasDisability &&
+      (intake.childrenUnder19 || intake.childrenUnder5)
+        ? 0.87
+        : 0,
+    reasons: () => [
+      text(
+        "CSHCN covers Texas children with physical or developmental special health care needs.",
+        "CSHCN cubre a ninos en Texas con necesidades especiales de salud fisicas o del desarrollo.",
+      ),
+      text(
+        "Sliding-fee scale means most families pay little or nothing.",
+        "La cuota segun ingresos significa que la mayoria de familias paga poco o nada.",
+      ),
+    ],
+    documentsNeeded: [
+      text("Child's diagnosis or medical records", "Diagnostico o expediente medico del nino"),
+      text("Proof of income", "Comprobante de ingresos"),
+      text("Photo ID", "Identificacion con foto"),
+    ],
+  },
+  "nm-wic": {
+    score: (intake) =>
+      intake.region === "new-mexico" &&
+      (intake.monthlyIncomeBand === "under-1000" || intake.monthlyIncomeBand === "1000-2000") &&
+      (intake.pregnantOrPostpartum || intake.childrenUnder5)
+        ? 0.94
+        : 0,
+    reasons: () => [
+      text(
+        "NM WIC matches pregnant women and families with young children in New Mexico.",
+        "WIC de NM coincide con mujeres embarazadas y familias con ninos pequenos en Nuevo Mexico.",
+      ),
+    ],
+    documentsNeeded: [
+      text("Photo ID", "Identificacion con foto"),
+      text("Proof of address in New Mexico", "Comprobante de domicilio en Nuevo Mexico"),
+      text("Pregnancy or child records", "Comprobantes de embarazo o del nino"),
+    ],
+  },
+  "nm-works": {
+    score: (intake) =>
+      intake.region === "new-mexico" &&
+      intake.monthlyIncomeBand === "under-1000" &&
+      intake.childrenUnder19
+        ? 0.91
+        : 0,
+    reasons: () => [
+      text(
+        "NM Works provides cash support for very low-income New Mexico families with children.",
+        "NM Works ofrece apoyo en efectivo para familias de muy bajos ingresos con ninos en Nuevo Mexico.",
+      ),
+    ],
+    documentsNeeded: [
+      text("Photo ID", "Identificacion con foto"),
+      text("Children's birth records", "Actas de nacimiento de los ninos"),
+      text("Proof of income", "Comprobante de ingresos"),
+      text("New Mexico address", "Domicilio en Nuevo Mexico"),
+    ],
+  },
+  "ep-project-vida": {
+    score: (intake) =>
+      intake.region === "texas" &&
+      (intake.monthlyIncomeBand === "under-1000" ||
+        intake.monthlyIncomeBand === "1000-2000" ||
+        intake.monthlyIncomeBand === "2000-3500")
+        ? 0.72
+        : 0,
+    reasons: () => [
+      text(
+        "Project Vida provides sliding-fee primary, dental, and behavioral health care in El Paso regardless of insurance or immigration status.",
+        "Project Vida ofrece atencion primaria, dental y de salud conductual a cuota accesible en El Paso sin importar seguro o estatus migratorio.",
+      ),
+    ],
+    documentsNeeded: [
+      text("Any ID accepted (no insurance required)", "Cualquier identificacion (no se requiere seguro)"),
+      text("Address in El Paso area", "Domicilio en el area de El Paso"),
+    ],
+  },
 };

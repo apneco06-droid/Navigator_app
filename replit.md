@@ -36,6 +36,20 @@ See `.env.example`. TTS features require either:
 - `ELEVENLABS_API_KEY` (preferred)
 - `OPENAI_API_KEY`
 
+## Benefit Programs
+
+Core programs are in `navigator-programs.json`. Additional programs are defined in `src/data/programs.ts` (`additionalPrograms`):
+
+- **NM SNAP, NM Medicaid, NM LIHEAP** — New Mexico equivalents
+- **MX Consular Support, MX Health Window** — Mexico/border consular services
+- **Healthy Texas Women (htw)** — Family planning & preventive care, women 15–44, TX
+- **CSHCN Services Program (cshcn)** — Children with special health needs, TX
+- **New Mexico WIC (nm-wic)** — Nutrition support, pregnant women & children under 5, NM
+- **NM Works (nm-works)** — Cash assistance, very low income families with children, NM
+- **Project Vida El Paso (ep-project-vida)** — Sliding-fee community health center, El Paso
+
+Eligibility rules for all programs live in `src/data/eligibilityRules.ts`.
+
 ## Development
 
 - **Run**: `PORT=5000 HOST=0.0.0.0 node server.mjs`

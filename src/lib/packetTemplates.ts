@@ -121,7 +121,7 @@ function resolveFamily(match: MatchResult): FamilyId {
   }
 
   if (
-    ["snap", "nm-snap", "wic", "medicaid", "nm-medicaid", "chip", "tanf", "headstart"].includes(
+    ["snap", "nm-snap", "wic", "nm-wic", "medicaid", "nm-medicaid", "chip", "tanf", "nm-works", "headstart", "htw", "cshcn", "ep-project-vida"].includes(
       program.id,
     )
   ) {

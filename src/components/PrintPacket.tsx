@@ -1,4 +1,3 @@
-import { buildApplicationDrafts } from "../lib/applicationDrafts";
 import { buildPacketTemplates } from "../lib/packetTemplates";
 import { TexasBenefitsForms } from "./TexasBenefitsForms";
 import { MatchResult, IntakeForm as IntakeFormValue } from "../lib/matching";
@@ -16,7 +15,6 @@ export function PrintPacket({ intake, matches, printTarget }: PrintPacketProps) 
       : matches.filter(({ program }) => program.id === printTarget).slice(0, 1);
   const applicantName = `${intake.firstName} ${intake.lastName}`.trim();
   const packetTemplates = buildPacketTemplates(intake, selectedMatches, intake.language);
-  const applicationDrafts = buildApplicationDrafts(intake, selectedMatches);
   const labels = getLabels(intake.language);
 
   return (
@@ -34,7 +32,6 @@ export function PrintPacket({ intake, matches, printTarget }: PrintPacketProps) 
             <p>
               {labels.preparedFor} {applicantName || labels.applicant}
             </p>
-            <p className="print-helper">{labels.printHelper}</p>
           </div>
           <button type="button" className="secondary-button" onClick={() => window.print()}>
             {labels.printButton}
@@ -79,47 +76,6 @@ export function PrintPacket({ intake, matches, printTarget }: PrintPacketProps) 
             </ul>
           </section>
         </div>
-
-        <section className="packet-checklist">
-          <h4>{labels.draftTitle}</h4>
-          <div className="packet-template-list">
-            {applicationDrafts.map((draft) => (
-              <section key={draft.id} className="packet-template">
-                <header className="packet-template-header">
-                  <div>
-                    <h5>{draft.title}</h5>
-                    <p>{draft.office}</p>
-                  </div>
-                  <span className="packet-mode-pill">{draft.deliveryLabel}</span>
-                </header>
-                <p className="packet-template-intro">{draft.summary}</p>
-                <p className="packet-routing-note">{draft.actionHint}</p>
-
-                <div className="packet-detail-list">
-                  {draft.sections.map((section) => (
-                    <article key={`${draft.id}-${section.title}`} className="packet-detail-card">
-                      <div className="packet-detail-header">
-                        <div>
-                          <h5>{section.title}</h5>
-                          <p>{draft.eligibility}</p>
-                        </div>
-                      </div>
-
-                      <dl className="draft-definition-list">
-                        {section.fields.map((field) => (
-                          <div key={`${draft.id}-${field.label}`}>
-                            <dt>{field.label}</dt>
-                            <dd>{field.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        </section>
 
         <TexasBenefitsForms intake={intake} matches={selectedMatches} />
 
@@ -169,27 +125,30 @@ export function PrintPacket({ intake, matches, printTarget }: PrintPacketProps) 
                           </div>
                         </div>
 
-                        <div className="packet-columns">
-                          <div>
-                            <strong>{labels.missingFields}</strong>
-                            <ul>
-                              {missingFields.length > 0 ? (
-                                missingFields.map((field) => <li key={field}>{field}</li>)
-                              ) : (
-                                <li>{labels.noMissingFields}</li>
-                              )}
-                            </ul>
+                        {(missingFields.length > 0 || nextSteps.length > 0) && (
+                          <div className="packet-columns">
+                            {missingFields.length > 0 && (
+                              <div>
+                                <strong>{labels.missingFields}</strong>
+                                <ul>
+                                  {missingFields.map((field) => (
+                                    <li key={field}>{field}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {nextSteps.length > 0 && (
+                              <div>
+                                <strong>{labels.nextSteps}</strong>
+                                <ul>
+                                  {nextSteps.map((step) => (
+                                    <li key={step}>{step}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
-
-                          <div>
-                            <strong>{labels.nextSteps}</strong>
-                            <ul>
-                              {nextSteps.map((step) => (
-                                <li key={step}>{step}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
+                        )}
                       </article>
                     ),
                   )}
@@ -217,60 +176,52 @@ function getLabels(language: IntakeFormValue["language"]) {
   if (language === "es") {
     return {
       packetEyebrow: "Paquete imprimible",
-      packetTitle: "Solicitudes listas para imprimir o guardar como PDF",
-      packetDescription:
-        "Usa este paquete para revisar las respuestas, imprimir formularios base y continuar con cada beneficio por la ruta correcta.",
-      prefilledTitle: "Paquete prellenado de Navigator",
-      preparedFor: "Preparado para",
+      packetTitle: "Aplicaciones listas para imprimir",
+      packetDescription: "Revisa, imprime o guarda como PDF para cada beneficio.",
+      prefilledTitle: "Paquete prellenado",
+      preparedFor: "Para",
       applicant: "Solicitante",
-      printButton: "Imprimir o guardar PDF",
-      printHelper: "Tu navegador puede guardar este paquete como PDF desde la ventana de impresion.",
-      summaryTitle: "Resumen del solicitante",
+      printButton: "Imprimir / PDF",
+      summaryTitle: "Resumen",
       location: "Ubicacion",
       unknownCity: "Ciudad desconocida",
       address: "Direccion",
-      leaveBlank: "Dejar en blanco para llenado posterior",
+      leaveBlank: "Pendiente",
       phone: "Telefono",
-      sensitiveFields: "Campos sensibles",
-      skipped: "Omitidos por privacidad",
-      addLater: "Se pueden agregar despues",
+      sensitiveFields: "Datos sensibles",
+      skipped: "Omitidos",
+      addLater: "Por agregar",
       likelyPrograms: "Beneficios seleccionados",
-      draftTitle: "Borradores de solicitud",
-      templatesTitle: "Rutas y documentos por programa",
+      templatesTitle: "Por que coincide y que llevar",
       whyMatch: "Por que coincide",
-      documentsNeeded: "Documentos necesarios",
-      missingFields: "Campos faltantes para completar despues",
-      noMissingFields: "No faltan campos importantes del intake basico.",
+      documentsNeeded: "Que llevar",
+      missingFields: "Por completar",
       nextSteps: "Siguientes pasos",
     };
   }
 
   return {
     packetEyebrow: "Printable packet",
-    packetTitle: "Applications ready to print or save as PDF",
-    packetDescription:
-      "Use this packet to review the answers, print base forms, and continue each benefit through the correct route.",
-    prefilledTitle: "Navigator prefilled packet",
-    preparedFor: "Prepared for",
+    packetTitle: "Applications ready to print",
+    packetDescription: "Review, print, or save as PDF for each benefit.",
+    prefilledTitle: "Prefilled packet",
+    preparedFor: "For",
     applicant: "Applicant",
-    printButton: "Print or save PDF",
-    printHelper: "Your browser can save this packet as a PDF from the print dialog.",
-    summaryTitle: "Applicant summary",
+    printButton: "Print / PDF",
+    summaryTitle: "Summary",
     location: "Location",
     unknownCity: "Unknown city",
     address: "Address",
-    leaveBlank: "Leave blank for later completion",
+    leaveBlank: "Pending",
     phone: "Phone",
     sensitiveFields: "Sensitive fields",
-    skipped: "Skipped for privacy",
-    addLater: "May be added later",
+    skipped: "Skipped",
+    addLater: "To add later",
     likelyPrograms: "Selected benefits",
-    draftTitle: "Application drafts",
-    templatesTitle: "Program routes and required documents",
-    whyMatch: "Why this match",
-    documentsNeeded: "Needed documents",
-    missingFields: "Missing fields to fill later",
-    noMissingFields: "No major fields missing from the basic intake.",
+    templatesTitle: "Why it fits & what to bring",
+    whyMatch: "Why it fits",
+    documentsNeeded: "Bring",
+    missingFields: "To complete",
     nextSteps: "Next steps",
   };
 }

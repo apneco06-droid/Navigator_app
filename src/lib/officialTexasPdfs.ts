@@ -273,7 +273,14 @@ function drawField(
     align === "center"
       ? rect.x + Math.max((rect.width - textWidth) / 2, horizontalPadding)
       : rect.x + horizontalPadding;
-  const y = rect.y + Math.max((rect.height - size) / 2, 1);
+
+  // Use Helvetica font metrics for accurate vertical centering:
+  // ascent ≈ 0.718 × size (top of capitals above baseline)
+  // descent ≈ 0.207 × size (descenders below baseline)
+  // Centers the visible glyph range in the field box.
+  const ascent = size * 0.718;
+  const descent = size * 0.207;
+  const y = rect.y + (rect.height - ascent - descent) / 2 + descent;
 
   page.drawText(content, { x, y, size, font, color });
 }
