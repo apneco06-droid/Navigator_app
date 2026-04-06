@@ -35,25 +35,25 @@ A bilingual (English/Spanish) Texas benefits intake and printable application as
 
 ## PDF Engine (`src/lib/officialTexasPdfs.ts`)
 
-Generates combined application packets using pdf-lib. All drawn text is strictly ASCII (no WinAnsi crashes).
+Loads the official HHSC forms and **overlays applicant data at calibrated pixel coordinates** — text appears directly on the real form, perfectly aligned.
 
-### Combined packet structure
-1. **2-page pre-filled data sheet** — generated from scratch; all intake answers laid out in a clean grid
-2. **Separator / instruction page** — blue header, 5-step submission guide, HHSC contact box
-3. **Official blank form pages** — loaded from `public/forms/` (XFA stripped, static visual background preserved)
+### Approach: coordinate overlay on the real form
+- `generateTexasH1010PdfPair` loads `H1010_Apr2024_3.pdf`, fills pages 4, 5, and 19 (form pages 1, 2, 16)
+- `generateTexasH1010MrPdfPair` loads `H1010-MR.pdf`, fills page 0
+- `generateTexasH0011Pdf` loads `H0011.pdf`, overlays basic fields on page 0
+- XFA is stripped by pdf-lib; the static visual background (form lines, labels) survives
+- All drawn text is ASCII-only (no WinAnsi crashes)
 
-### Forms supported
-| Function | Packet | Programs |
+### Forms in `public/forms/`
+| File | Pages | Used on |
 |---|---|---|
-| `generateTexasH1010PdfPair` | H1010 (July 2025, 34 pp) | SNAP, Medicaid, TANF, CHIP |
-| `generateTexasH0011Pdf` | H0011 / TSAP (July 2025, 10 pp) | SNAP (elderly/disabled only) |
+| `H1010_Apr2024_3.pdf` | 33 | Primary SNAP/Medicaid/TANF/CHIP packet |
+| `H1010-MR.pdf` | 9 | Medical Records / tax addendum |
+| `H0011.pdf` | 10 | TSAP simplified SNAP (elderly/disabled) |
+| `H1010.pdf`, `H1113.pdf`, `H1200.pdf`, `H1200-MBI.pdf`, `H1205.pdf` | various | Reserved for future forms |
 
 ### WinAnsi rule
-All strings passed to `page.drawText()` must be ASCII-only (0x00–0x7F). Never use `✓`, `—`, `–`, `·`, or any non-ASCII character in drawn text. Checkboxes are drawn as filled blue rectangles, not Unicode characters.
-
-### Official forms in `public/forms/`
-H0011, H1010, H1113, H1200, H1200-MBI, H1205 (all July–Oct 2025 HHSC versions).  
-All are XFA-hybrid; pdf-lib strips XFA but the static page background (form labels, lines) survives for printing.
+All strings passed to `page.drawText()` must be ASCII-only (0x00–0x7F). Never use `✓`, `—`, `–`, `·`, or any non-ASCII in drawn text. Use "X" for checkbox marks.
 
 ### External links (not downloaded)
 SSI → SSA-8000-BK on ssa.gov | Section 8 → HUD-52517 on hud.gov | SSA-827 on ssa.gov
