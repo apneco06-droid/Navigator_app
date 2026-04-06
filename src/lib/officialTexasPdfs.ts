@@ -54,45 +54,52 @@ export interface PdfPair {
 const H1010_TEMPLATE: FieldDef[] = [
 
   // ── PDF page 4 = Form page 1 ───────────────────────────────────────────────
-  // Program selection marks
-  { kind: "mark", key: "snap",              page: 4, x: 207, y: 649 },
-  { kind: "mark", key: "tanf",              page: 4, x: 351, y: 649 },
-  { kind: "mark", key: "chip",              page: 4, x: 468, y: 681 },
-  { kind: "mark", key: "medicaid_children", page: 4, x: 468, y: 656 },
-  { kind: "mark", key: "medicaid_adult",    page: 4, x: 468, y: 632 },
-  { kind: "mark", key: "pregnant",          page: 4, x: 468, y: 608 },
+  // Program selection marks — calibrated via dot-grid overlay at 150 DPI
+  // SNAP/TANF circles are left-center of Section A box (~y=657)
+  // Medicaid/CHIP circles are right column, ~11 pt apart top-to-bottom
+  { kind: "mark", key: "snap",              page: 4, x: 207, y: 657 },
+  { kind: "mark", key: "tanf",              page: 4, x: 371, y: 657 },
+  { kind: "mark", key: "chip",              page: 4, x: 466, y: 678 },  // "Children"
+  { kind: "mark", key: "medicaid_children", page: 4, x: 466, y: 667 },  // "Adult Caring for a Child"
+  { kind: "mark", key: "medicaid_adult",    page: 4, x: 466, y: 656 },  // "Adult not Caring for a Child"
+  { kind: "mark", key: "pregnant",          page: 4, x: 466, y: 645 },  // "Pregnant Women"
 
-  // Applicant name (three separate boxes)
-  { kind: "text", key: "firstName",  page: 4, rect: { x: 157, y: 526, width: 115, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "middleName", page: 4, rect: { x: 316, y: 526, width:  98, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "lastName",   page: 4, rect: { x: 476, y: 526, width:  88, height: 18 }, align: "center", fontSize: 12, uppercase: true },
+  // Applicant name — three columns spanning Person 1 input row (y≈564-576)
+  { kind: "text", key: "firstName",  page: 4, rect: { x: 130, y: 564, width: 168, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "middleName", page: 4, rect: { x: 308, y: 564, width: 150, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "lastName",   page: 4, rect: { x: 469, y: 564, width: 130, height: 12 }, align: "center", fontSize: 9, uppercase: true },
 
-  // SSN and date of birth
-  { kind: "text", key: "ssn", page: 4, rect: { x: 320, y: 479, width: 105, height: 18 }, align: "center", fontSize: 12 },
-  { kind: "text", key: "dob", page: 4, rect: { x: 443, y: 479, width: 118, height: 18 }, align: "center", fontSize: 12 },
+  // SSN and date of birth — row below names (y≈554-565)
+  // SSN spans left portion; DOB spans right portion
+  { kind: "text", key: "ssn", page: 4, rect: { x: 130, y: 554, width: 255, height: 12 }, align: "center", fontSize: 9 },
+  { kind: "text", key: "dob", page: 4, rect: { x: 425, y: 554, width: 175, height: 12 }, align: "center", fontSize: 9 },
 
-  // Home / physical address
-  { kind: "text", key: "address", page: 4, rect: { x: 320, y: 455, width: 243, height: 18 }, align: "left",   fontSize: 12, uppercase: true },
-  { kind: "text", key: "city",    page: 4, rect: { x: 320, y: 407, width: 108, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "state",   page: 4, rect: { x: 430, y: 407, width:  59, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "zipCode", page: 4, rect: { x: 541, y: 407, width:  36, height: 18 }, align: "center", fontSize: 12 },
+  // Mailing address — "Mailing address" labeled row (y≈497-509)
+  { kind: "text", key: "address", page: 4, rect: { x: 178, y: 497, width: 388, height: 12 }, align: "left", fontSize: 9, uppercase: true },
 
-  // Phone numbers (home / cell)
-  { kind: "text", key: "phone",     page: 4, rect: { x: 320, y: 359, width: 108, height: 18 }, align: "center", fontSize: 12 },
-  { kind: "text", key: "cellPhone", page: 4, rect: { x: 443, y: 359, width: 118, height: 18 }, align: "center", fontSize: 12 },
+  // Mailing city / state / zip (y≈450-462)
+  { kind: "text", key: "city",    page: 4, rect: { x: 178, y: 450, width: 187, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "state",   page: 4, rect: { x: 375, y: 450, width:  59, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "zipCode", page: 4, rect: { x: 440, y: 450, width:  72, height: 12 }, align: "center", fontSize: 9 },
 
-  // Mailing address (same as home; county on second row)
-  { kind: "text", key: "address", page: 4, rect: { x: 320, y: 310, width: 243, height: 18 }, align: "left",   fontSize: 12, uppercase: true },
-  { kind: "text", key: "county",  page: 4, rect: { x: 430, y: 310, width: 133, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "city",    page: 4, rect: { x: 320, y: 262, width: 108, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "state",   page: 4, rect: { x: 430, y: 262, width:  59, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "text", key: "zipCode", page: 4, rect: { x: 541, y: 262, width:  36, height: 18 }, align: "center", fontSize: 12 },
+  // Phone numbers — overlaid on the "( ) –" pre-printed format (y≈430-442)
+  { kind: "text", key: "phone",     page: 4, rect: { x: 178, y: 430, width: 185, height: 12 }, align: "center", fontSize: 9 },
+  { kind: "text", key: "cellPhone", page: 4, rect: { x: 387, y: 430, width: 190, height: 12 }, align: "center", fontSize: 9 },
 
-  // Income section
-  { kind: "mark", key: "hasNoIncome",       page: 4, x: 481, y: 144 },   // "No" for unearned income question
-  { kind: "mark", key: "hasEarnedIncome",   page: 4, x: 438, y: 112 },   // "Yes" for earned income
+  // Home address + county — same input row (y≈377-389)
+  { kind: "text", key: "address", page: 4, rect: { x: 178, y: 377, width: 258, height: 12 }, align: "left",   fontSize: 9, uppercase: true },
+  { kind: "text", key: "county",  page: 4, rect: { x: 445, y: 377, width: 138, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+
+  // Home city / state / zip (y≈350-362)
+  { kind: "text", key: "city",    page: 4, rect: { x: 178, y: 350, width: 187, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "state",   page: 4, rect: { x: 375, y: 350, width:  59, height: 12 }, align: "center", fontSize: 9, uppercase: true },
+  { kind: "text", key: "zipCode", page: 4, rect: { x: 440, y: 350, width:  72, height: 12 }, align: "center", fontSize: 9 },
+
+  // Income section (Section B — bottom of page 1)
+  { kind: "mark", key: "hasNoIncome",       page: 4, x: 481, y: 144 },
+  { kind: "mark", key: "hasEarnedIncome",   page: 4, x: 438, y: 112 },
   { kind: "text", key: "earnedIncome",      page: 4, rect: { x: 515, y: 101, width: 53, height: 16 }, align: "center", fontSize: 11 },
-  { kind: "mark", key: "hasEarnedIncome",   page: 4, x: 438, y: 82  },   // repeated on next line
+  { kind: "mark", key: "hasEarnedIncome",   page: 4, x: 438, y: 82  },
   { kind: "text", key: "earnedIncome",      page: 4, rect: { x: 515, y: 70,  width: 53, height: 16 }, align: "center", fontSize: 11 },
   { kind: "mark", key: "hasHousingExpense", page: 4, x: 438, y: 49  },
   { kind: "text", key: "housingAmount",     page: 4, rect: { x: 515, y: 38,  width: 53, height: 16 }, align: "center", fontSize: 11 },
@@ -110,13 +117,14 @@ const H1010_TEMPLATE: FieldDef[] = [
   { kind: "text", key: "ssn",               page: 5, rect: { x: 63,  y: 0,  width: 131, height: 18 }, align: "center", fontSize: 11 },
 
   // ── PDF page 19 = Form page 16 ────────────────────────────────────────────
+  // Preferred contact method — widget x/y from PDF annotation data
   { kind: "text", key: "fullName",         page: 19, rect: { x: 337, y: 320, width: 224, height: 18 }, align: "center", fontSize: 12, uppercase: true },
   { kind: "text", key: "interviewLang",    page: 19, rect: { x: 336, y: 290, width: 225, height: 18 }, align: "center", fontSize: 12, uppercase: true },
-  { kind: "mark", key: "contactPhone",     page: 19, x: 145, y: 247 },
+  { kind: "mark", key: "contactPhone",     page: 19, x: 153, y: 250 },
   { kind: "text", key: "contactPhoneNum",  page: 19, rect: { x: 438, y: 246, width: 112, height: 18 }, align: "center", fontSize: 12 },
-  { kind: "mark", key: "contactText",      page: 19, x: 145, y: 196 },
+  { kind: "mark", key: "contactText",      page: 19, x: 153, y: 201 },
   { kind: "text", key: "contactTextNum",   page: 19, rect: { x: 438, y: 195, width: 112, height: 18 }, align: "center", fontSize: 12 },
-  { kind: "mark", key: "contactEmail",     page: 19, x: 145, y: 145 },
+  { kind: "mark", key: "contactEmail",     page: 19, x: 153, y: 158 },
   { kind: "text", key: "contactEmailAddr", page: 19, rect: { x: 332, y: 145, width: 228, height: 18 }, align: "center", fontSize: 11 },
   { kind: "text", key: "ssn",              page: 19, rect: { x: 69,  y: 16,  width: 126, height: 18 }, align: "center", fontSize: 11 },
 ];
