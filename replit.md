@@ -19,16 +19,29 @@ A bilingual (English/Spanish) Texas benefits intake and printable application as
 │   ├── main.tsx                 # Entry point
 │   ├── styles.css               # Global styles
 │   ├── components/              # UI components (ConversationGuide, ProgramMatches, etc.)
-│   ├── data/                    # programs.ts, eligibilityRules.ts
+│   │   ├── OfficialPdfDownloads.tsx  # H1010 data-sheet download + SSI/HUD form links
+│   │   ├── ProgramDetailIntake.tsx   # Program-specific detail questions (detail stage)
+│   │   └── ApplyNow.tsx              # Apply stage cards with submission info
+│   ├── data/                    # programs.ts, eligibilityRules.ts, submissionInfo.ts
 │   ├── hooks/                   # useInstantSpeech, useSpeechRecognition
-│   └── lib/                     # matching.ts, officialTexasPdfs.ts, applicationDrafts.ts, packetTemplates.ts
+│   └── lib/                     # matching.ts, officialTexasPdfs.ts (from-scratch PDF generator)
 ├── public/
-│   └── forms/                   # H1010 PDF forms
+│   └── forms/                   # H1010 source PDFs (kept for reference; not fetched at runtime)
 ├── server.mjs                   # Custom Node.js dev/preview server with TTS proxy
 ├── vite.config.ts               # Vite config (allowedHosts: true for Replit proxy)
 ├── navigator-programs.json      # Program data
 └── package.json
 ```
+
+## PDF Engine (`src/lib/officialTexasPdfs.ts`)
+
+Generates application data-sheet PDFs entirely from scratch using pdf-lib — no XFA overlay:
+- **Page 1**: Benefits requested checkboxes, applicant ID, address, household/income
+- **Page 2**: Additional H1010 questions, H1010-MR tax/Medicaid addendum, signature block
+- Programs returning SSI or SSDI also link to the live SSA-8000-BK PDF on ssa.gov
+- Programs returning Section 8 link to the live HUD-52517 PDF on hud.gov
+
+App stages: `guide` → `results` → `detail` (ProgramDetailIntake) → `apply` (OfficialPdfDownloads + ApplyNow)
 
 ## Environment Variables
 
