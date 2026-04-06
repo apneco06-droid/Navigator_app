@@ -34,6 +34,20 @@ export interface PdfPair {
 // LOW-LEVEL DRAWING HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Converts a string to uppercase for consistent form appearance.
+ * Government forms conventionally use ALL-CAPS for name/address data.
+ */
+function up(text: string): string {
+  return (text || "").trim().toUpperCase();
+}
+
+/**
+ * Draws text centred inside a field rectangle.
+ *
+ * Vertical alignment uses Helvetica's cap-height ratio (~0.72 × em size)
+ * so uppercase letters appear visually centred — not the full em box.
+ */
 function drawField(
   page: PDFPage,
   text: string,
@@ -46,18 +60,23 @@ function drawField(
   const value = (text || "").trim();
   if (!value) return;
 
-  const horizontalPadding = 4;
-  const maxWidth = rect.width - horizontalPadding * 2;
+  const hPad    = 4;
+  const maxWidth = rect.width - hPad * 2;
   let content = value;
   while (content.length > 0 && font.widthOfTextAtSize(content, size) > maxWidth) {
     content = content.slice(0, -1);
   }
+
   const textWidth = font.widthOfTextAtSize(content, size);
   const x =
     align === "center"
-      ? rect.x + Math.max((rect.width - textWidth) / 2, horizontalPadding)
-      : rect.x + horizontalPadding;
-  const y = rect.y + Math.max((rect.height - size) / 2, 1);
+      ? rect.x + Math.max((rect.width - textWidth) / 2, hPad)
+      : rect.x + hPad;
+
+  // Cap-height centering: Helvetica cap height ≈ 0.72 × em size.
+  // This baseline places uppercase letters visually centred in the rect.
+  const capHeight = size * 0.72;
+  const y = rect.y + Math.max((rect.height - capHeight) / 2, 1);
 
   page.drawText(content, { x, y, size, font, color });
 }
@@ -160,30 +179,30 @@ function fillH1010Page1(
   if (intake.pregnantOrPostpartum) drawMark(page, 468, 608, boldFont);
 
   // Applicant name
-  drawField(page, intake.firstName,  { x: 157, y: 526, width: 115, height: 18 }, inputSize, font, black, "center");
-  drawField(page, intake.middleName, { x: 316, y: 526, width:  98, height: 18 }, inputSize, font, black, "center");
-  drawField(page, intake.lastName,   { x: 476, y: 526, width:  88, height: 18 }, inputSize, font, black, "center");
+  drawField(page, up(intake.firstName),  { x: 157, y: 526, width: 115, height: 18 }, inputSize, font, black, "center");
+  drawField(page, up(intake.middleName), { x: 316, y: 526, width:  98, height: 18 }, inputSize, font, black, "center");
+  drawField(page, up(intake.lastName),   { x: 476, y: 526, width:  88, height: 18 }, inputSize, font, black, "center");
 
   // SSN and DOB
   drawField(page, formatSsn(intake.socialSecurityNumber), { x: 320, y: 479, width: 105, height: 18 }, inputSize, font, black, "center");
   drawField(page, intake.dateOfBirth,                     { x: 443, y: 479, width: 118, height: 18 }, inputSize, font, black, "center");
 
   // Home address
-  drawField(page, intake.address,              { x: 320, y: 455, width: 243, height: 18 }, inputSize, font,     black);
-  drawField(page, intake.city,                 { x: 320, y: 407, width: 108, height: 18 }, inputSize, font,     black, "center");
-  drawField(page, "TX",                        { x: 430, y: 407, width:  59, height: 18 }, inputSize, boldFont, black, "center");
-  drawField(page, intake.zipCode,              { x: 541, y: 407, width:  36, height: 18 }, inputSize, font,     black, "center");
+  drawField(page, up(intake.address), { x: 320, y: 455, width: 243, height: 18 }, inputSize, font,     black);
+  drawField(page, up(intake.city),    { x: 320, y: 407, width: 108, height: 18 }, inputSize, font,     black, "center");
+  drawField(page, "TX",               { x: 430, y: 407, width:  59, height: 18 }, inputSize, boldFont, black, "center");
+  drawField(page, intake.zipCode,     { x: 541, y: 407, width:  36, height: 18 }, inputSize, font,     black, "center");
 
   // Phone numbers
-  drawField(page, formatPhone(intake.phone),                        { x: 320, y: 359, width: 108, height: 18 }, inputSize, font, black, "center");
-  drawField(page, formatPhone(intake.cellPhone || intake.phone),    { x: 443, y: 359, width: 118, height: 18 }, inputSize, font, black, "center");
+  drawField(page, formatPhone(intake.phone),                     { x: 320, y: 359, width: 108, height: 18 }, inputSize, font, black, "center");
+  drawField(page, formatPhone(intake.cellPhone || intake.phone), { x: 443, y: 359, width: 118, height: 18 }, inputSize, font, black, "center");
 
   // Mailing address (same as home)
-  drawField(page, intake.address, { x: 320, y: 310, width: 243, height: 18 }, inputSize, font,     black);
-  drawField(page, intake.county,  { x: 430, y: 310, width: 133, height: 18 }, inputSize, font,     black, "center");
-  drawField(page, intake.city,    { x: 320, y: 262, width: 108, height: 18 }, inputSize, font,     black, "center");
-  drawField(page, "TX",           { x: 430, y: 262, width:  59, height: 18 }, inputSize, boldFont, black, "center");
-  drawField(page, intake.zipCode, { x: 541, y: 262, width:  36, height: 18 }, inputSize, font,     black, "center");
+  drawField(page, up(intake.address), { x: 320, y: 310, width: 243, height: 18 }, inputSize, font,     black);
+  drawField(page, up(intake.county),  { x: 430, y: 310, width: 133, height: 18 }, inputSize, font,     black, "center");
+  drawField(page, up(intake.city),    { x: 320, y: 262, width: 108, height: 18 }, inputSize, font,     black, "center");
+  drawField(page, "TX",               { x: 430, y: 262, width:  59, height: 18 }, inputSize, boldFont, black, "center");
+  drawField(page, intake.zipCode,     { x: 541, y: 262, width:  36, height: 18 }, inputSize, font,     black, "center");
 
   // Income and housing
   const hasIncome = monthlyIncomeToAmount(intake.monthlyIncomeBand) !== "";
@@ -216,7 +235,7 @@ function fillH1010Page2(
   drawYesNo(page, intake.isVeteran,            512, 414, 554, 414, boldFont);
   drawYesNo(page, intake.needsInterviewHelp,   513, 213, 556, 213, boldFont);
   drawYesNo(page, intake.interviewHelpDetails.trim().length > 0, 513, 163, 556, 163, boldFont);
-  drawField(page, interviewLang, { x: 362, y: 86, width: 196, height: 18 }, 11, font, black, "center");
+  drawField(page, up(interviewLang), { x: 362, y: 86, width: 196, height: 18 }, 11, font, black, "center");
   drawYesNo(page, intake.needsInterpreter, 514, 52, 556, 52, boldFont);
 
   if (intake.needsInterpreter) {
@@ -224,7 +243,7 @@ function fillH1010Page2(
     if (lang.includes("span") || lang === "es") {
       drawMark(page, 179, 20, boldFont);
     } else {
-      drawField(page, intake.interpreterLanguage, { x: 364, y: 6, width: 194, height: 18 }, 10.5, font, black, "center");
+      drawField(page, up(intake.interpreterLanguage), { x: 364, y: 6, width: 194, height: 18 }, 10.5, font, black, "center");
     }
   }
 
@@ -245,8 +264,8 @@ function fillH1010Page16(
   const interviewLang = intake.interviewLanguage ||
     (intake.language === "es" ? "Spanish" : "English");
 
-  drawField(page, fullName(intake), { x: 337, y: 320, width: 224, height: 18 }, 12, font, black, "center");
-  drawField(page, interviewLang,    { x: 336, y: 290, width: 225, height: 18 }, 12, font, black, "center");
+  drawField(page, up(fullName(intake)), { x: 337, y: 320, width: 224, height: 18 }, 12, font, black, "center");
+  drawField(page, up(interviewLang),    { x: 336, y: 290, width: 225, height: 18 }, 12, font, black, "center");
 
   if (intake.preferredContactMethod === "phone") {
     drawMark(page, 145, 247, boldFont);
@@ -258,7 +277,7 @@ function fillH1010Page16(
   }
   if (intake.preferredContactMethod === "email") {
     drawMark(page, 145, 145, boldFont);
-    drawField(page, intake.email, { x: 332, y: 145, width: 228, height: 18 }, 11, font, black, "center");
+    drawField(page, intake.email.toLowerCase(), { x: 332, y: 145, width: 228, height: 18 }, 11, font, black, "center");
   }
 
   drawField(page, formatSsn(intake.socialSecurityNumber), { x: 69, y: 16, width: 126, height: 18 }, 11, font, black, "center");
@@ -280,18 +299,18 @@ function fillH1010MrPage1(
 ) {
   const black = rgb(0.08, 0.08, 0.08);
 
-  drawField(page, intake.firstName,  { x: 135, y: 390, width: 100, height: 16 }, 10.5, font, black, "center");
-  drawField(page, intake.middleName, { x: 260, y: 390, width:  92, height: 16 }, 10.5, font, black, "center");
-  drawField(page, intake.lastName,   { x: 404, y: 390, width: 116, height: 16 }, 10.5, font, black, "center");
-  drawField(page, intake.spouseName, { x: 136, y: 341, width: 386, height: 16 }, 10.5, font, black, "center");
+  drawField(page, up(intake.firstName),  { x: 135, y: 390, width: 100, height: 16 }, 10.5, font, black, "center");
+  drawField(page, up(intake.middleName), { x: 260, y: 390, width:  92, height: 16 }, 10.5, font, black, "center");
+  drawField(page, up(intake.lastName),   { x: 404, y: 390, width: 116, height: 16 }, 10.5, font, black, "center");
+  drawField(page, up(intake.spouseName), { x: 136, y: 341, width: 386, height: 16 }, 10.5, font, black, "center");
 
   drawYesNo(page, intake.plansToFileTaxes    === "yes", 521, 282, 560, 282, boldFont);
   drawYesNo(page, intake.filesJointly        === "yes", 521, 246, 560, 246, boldFont);
   drawYesNo(page, intake.claimsDependents    === "yes", 521, 211, 560, 211, boldFont);
-  drawField(page, intake.dependentNames, { x: 136, y: 167, width: 388, height: 16 }, 9.5, font, black, "center");
+  drawField(page, up(intake.dependentNames), { x: 136, y: 167, width: 388, height: 16 }, 9.5, font, black, "center");
   drawYesNo(page, intake.claimedAsDependent  === "yes", 521, 136, 560, 136, boldFont);
-  drawField(page, intake.taxFilerName,   { x: 136, y: 106, width: 255, height: 16 }, 10.5, font, black, "center");
-  drawField(page, intake.taxRelationship,{ x: 414, y: 106, width: 120, height: 16 }, 10,   font, black, "center");
+  drawField(page, up(intake.taxFilerName),   { x: 136, y: 106, width: 255, height: 16 }, 10.5, font, black, "center");
+  drawField(page, up(intake.taxRelationship),{ x: 414, y: 106, width: 120, height: 16 }, 10,   font, black, "center");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -372,11 +391,11 @@ export async function generateTexasH0011Pdf(
 
   const fieldY = (formY: number) => height - formY;
 
-  drawField(p, intake.firstName,                       { x: 140, y: fieldY(230), width:  95, height: 16 }, 10, font, black, "center");
-  drawField(p, intake.middleName,                      { x: 248, y: fieldY(230), width:  80, height: 16 }, 10, font, black, "center");
-  drawField(p, intake.lastName,                        { x: 340, y: fieldY(230), width: 105, height: 16 }, 10, font, black, "center");
-  drawField(p, intake.address,                         { x: 140, y: fieldY(258), width: 310, height: 16 }, 10, font, black);
-  drawField(p, intake.city,                            { x: 140, y: fieldY(286), width: 120, height: 16 }, 10, font, black, "center");
+  drawField(p, up(intake.firstName),                   { x: 140, y: fieldY(230), width:  95, height: 16 }, 10, font, black, "center");
+  drawField(p, up(intake.middleName),                  { x: 248, y: fieldY(230), width:  80, height: 16 }, 10, font, black, "center");
+  drawField(p, up(intake.lastName),                    { x: 340, y: fieldY(230), width: 105, height: 16 }, 10, font, black, "center");
+  drawField(p, up(intake.address),                     { x: 140, y: fieldY(258), width: 310, height: 16 }, 10, font, black);
+  drawField(p, up(intake.city),                        { x: 140, y: fieldY(286), width: 120, height: 16 }, 10, font, black, "center");
   drawField(p, "TX",                                   { x: 270, y: fieldY(286), width:  40, height: 16 }, 10, font, black, "center");
   drawField(p, intake.zipCode,                         { x: 320, y: fieldY(286), width:  55, height: 16 }, 10, font, black, "center");
   drawField(p, formatPhone(intake.phone),              { x: 140, y: fieldY(316), width: 140, height: 16 }, 10, font, black, "center");
