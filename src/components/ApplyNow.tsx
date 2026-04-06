@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { buildApplicationDrafts } from "../lib/applicationDrafts";
 import { MatchResult, IntakeForm as IntakeFormValue } from "../lib/matching";
 import { getSubmissionInfo } from "../data/submissionInfo";
@@ -6,29 +6,17 @@ import { getSubmissionInfo } from "../data/submissionInfo";
 interface ApplyNowProps {
   intake: IntakeFormValue;
   matches: MatchResult[];
-  onPreparePrint: (target: string | "all") => void;
 }
 
-type DeliveryMode = "online" | "print";
-
-export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("online");
+export function ApplyNow({ intake, matches }: ApplyNowProps) {
   const applicationDrafts = useMemo(
     () => buildApplicationDrafts(intake, matches),
     [intake, matches],
   );
   const isSpanish = intake.language === "es";
 
-  function handleOnline(programId: string, url: string) {
-    setDeliveryMode("online");
+  function handleOnline(url: string) {
     window.open(url, "_blank", "noopener,noreferrer");
-    onPreparePrint(programId);
-  }
-
-  function handlePrint(programId: string | "all") {
-    setDeliveryMode("print");
-    onPreparePrint(programId);
-    document.getElementById("print-sheet")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -38,26 +26,9 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
         <h2>{isSpanish ? "Solicitudes por beneficio" : "Applications by benefit"}</h2>
         <p>
           {isSpanish
-            ? "Elige el portal oficial o descarga el PDF prellenado."
-            : "Choose the official portal or download a prefilled PDF."}
+            ? "Accede al portal oficial o visita la oficina con la informacion de abajo."
+            : "Open the official portal or visit the office using the contact info below."}
         </p>
-      </div>
-
-      <div className="delivery-toggle" role="tablist" aria-label="Delivery mode">
-        <button
-          type="button"
-          className={deliveryMode === "online" ? "reply-chip active" : "reply-chip"}
-          onClick={() => setDeliveryMode("online")}
-        >
-          {isSpanish ? "Ruta oficial" : "Official portal"}
-        </button>
-        <button
-          type="button"
-          className={deliveryMode === "print" ? "reply-chip active" : "reply-chip"}
-          onClick={() => handlePrint("all")}
-        >
-          {isSpanish ? "PDF prellenado" : "Filled PDF"}
-        </button>
       </div>
 
       <div className="apply-stack">
@@ -120,7 +91,7 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
                   <button
                     type="button"
                     className="primary-button"
-                    onClick={() => handleOnline(draft.id, draft.program.applyUrl)}
+                    onClick={() => handleOnline(draft.program.applyUrl)}
                   >
                     {isSpanish ? "Abrir portal oficial" : "Open official portal"}
                   </button>
@@ -128,21 +99,11 @@ export function ApplyNow({ intake, matches, onPreparePrint }: ApplyNowProps) {
                   <button
                     type="button"
                     className="primary-button"
-                    onClick={() => handlePrint(draft.id)}
+                    onClick={() => handleOnline(draft.program.applyUrl)}
                   >
-                    {isSpanish ? "Preparar para imprimir" : "Prepare to print"}
+                    {isSpanish ? "Ver mas informacion" : "More information"}
                   </button>
                 )}
-
-                {draft.supportsPrinting ? (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => handlePrint(draft.id)}
-                  >
-                    {isSpanish ? "Guardar PDF" : "Save as PDF"}
-                  </button>
-                ) : null}
               </div>
             </article>
           );

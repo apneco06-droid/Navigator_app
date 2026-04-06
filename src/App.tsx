@@ -3,7 +3,6 @@ import { ApplyNow } from "./components/ApplyNow";
 import { ConversationGuide } from "./components/ConversationGuide";
 import { OfficialFormDetails } from "./components/OfficialFormDetails";
 import { OfficialPdfDownloads } from "./components/OfficialPdfDownloads";
-import { PrintPacket } from "./components/PrintPacket";
 import { ProgramDetailIntake } from "./components/ProgramDetailIntake";
 import { ProgramMatches } from "./components/ProgramMatches";
 import { programs } from "./data/programs";
@@ -71,7 +70,6 @@ function App() {
   const [intake, setIntake] = useState(initialState);
   const [stage, setStage] = useState<"guide" | "results" | "detail" | "apply">("guide");
   const [currentStep, setCurrentStep] = useState(0);
-  const [printTarget, setPrintTarget] = useState<string | "all">("all");
   const { speak } = useInstantSpeech();
 
   const matches = useMemo(() => matchPrograms(intake, programs), [intake]);
@@ -210,8 +208,7 @@ function App() {
           <>
             <OfficialFormDetails intake={intake} onChange={handleGuideAnswer} />
             <OfficialPdfDownloads intake={intake} matches={matches} />
-            <ApplyNow intake={intake} matches={matches} onPreparePrint={setPrintTarget} />
-            <PrintPacket intake={intake} matches={matches} printTarget={printTarget} />
+            <ApplyNow intake={intake} matches={matches} />
           </>
         ) : null}
       </main>
