@@ -47,119 +47,28 @@ function buildApplicationDraft(intake: IntakeForm, match: MatchResult): Applicat
     supportsPrinting: program.submissionMode === "print" || program.submissionMode === "office" || program.submissionMode === "mixed",
     sections: [
       {
-        title: language === "es" ? "Informacion del solicitante" : "Applicant information",
+        title: language === "es" ? "Elegibilidad" : "Eligibility",
         fields: [
           {
-            label: language === "es" ? "Nombre completo" : "Full name",
-            value: fullName(intake, language),
-          },
-          {
-            label: language === "es" ? "Telefono" : "Phone",
-            value: intake.phone.trim() || pending(language),
-          },
-          {
-            label: language === "es" ? "Direccion" : "Address",
-            value: intake.address.trim() || pending(language),
-          },
-          {
-            label: language === "es" ? "Ciudad y region" : "City and region",
-            value: `${intake.city || unknownCity(language)}, ${regionLabel(intake.region, language)}`,
-          },
-        ],
-      },
-      {
-        title: language === "es" ? "Perfil del hogar" : "Household profile",
-        fields: [
-          {
-            label: language === "es" ? "Tamano del hogar" : "Household size",
-            value: intake.householdSize,
-          },
-          {
-            label: language === "es" ? "Ingreso mensual estimado" : "Estimated monthly income",
-            value: incomeLabel(intake.monthlyIncomeBand, language),
-          },
-          {
-            label: language === "es" ? "Edad del solicitante" : "Applicant age band",
-            value: ageLabel(intake.ageBand, language),
-          },
-          {
-            label: language === "es" ? "Notas importantes" : "Important notes",
-            value: intake.notes.trim() || none(language),
-          },
-        ],
-      },
-      {
-        title: language === "es" ? "Puntos de elegibilidad" : "Eligibility notes",
-        fields: [
-          {
-            label: language === "es" ? "Por que coincide" : "Why it matches",
+            label: language === "es" ? "Por que coincide" : "Why it fits",
             value: match.reasons.join(" "),
           },
           {
-            label: language === "es" ? "Documentos para reunir" : "Documents to gather",
+            label: language === "es" ? "Documentos necesarios" : "Documents needed",
             value: match.documentsNeeded.join(", "),
           },
-          {
-            label: language === "es" ? "Falta completar" : "Still needed",
-            value:
-              match.missingFields.length > 0
-                ? match.missingFields.join(", ")
-                : language === "es"
-                  ? "No faltan campos principales."
-                  : "No major fields are missing.",
-          },
+          ...(match.missingFields.length > 0
+            ? [
+                {
+                  label: language === "es" ? "Falta completar" : "Still needed",
+                  value: match.missingFields.join(", "),
+                },
+              ]
+            : []),
         ],
       },
     ],
   };
-}
-
-function fullName(intake: IntakeForm, language: Language) {
-  const name = `${intake.firstName} ${intake.lastName}`.trim();
-  return name || (language === "es" ? "Pendiente" : "Pending");
-}
-
-function pending(language: Language) {
-  return language === "es" ? "Pendiente" : "Pending";
-}
-
-function none(language: Language) {
-  return language === "es" ? "Ninguna" : "None";
-}
-
-function unknownCity(language: Language) {
-  return language === "es" ? "Ciudad desconocida" : "Unknown city";
-}
-
-function regionLabel(region: IntakeForm["region"], language: Language) {
-  const labels = {
-    texas: { en: "Texas", es: "Texas" },
-    "new-mexico": { en: "New Mexico", es: "Nuevo Mexico" },
-    mexico: { en: "Mexico support", es: "Apoyo de Mexico" },
-  };
-
-  return labels[region][language];
-}
-
-function ageLabel(ageBand: IntakeForm["ageBand"], language: Language) {
-  const labels = {
-    "under-18": { en: "Under 18", es: "Menor de 18" },
-    "18-64": { en: "18 to 64", es: "18 a 64" },
-    "65-plus": { en: "65 and older", es: "65 o mas" },
-  };
-
-  return labels[ageBand][language];
-}
-
-function incomeLabel(incomeBand: IntakeForm["monthlyIncomeBand"], language: Language) {
-  const labels = {
-    "under-1000": { en: "Under $1,000", es: "Menos de $1,000" },
-    "1000-2000": { en: "$1,000 to $2,000", es: "$1,000 a $2,000" },
-    "2000-3500": { en: "$2,000 to $3,500", es: "$2,000 a $3,500" },
-    "3500-plus": { en: "$3,500 and up", es: "$3,500 o mas" },
-  };
-
-  return labels[incomeBand][language];
 }
 
 function deliveryLabel(mode: BenefitProgram["submissionMode"], language: Language) {

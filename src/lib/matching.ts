@@ -54,6 +54,14 @@ export interface IntakeForm {
   interpreterLanguage: string;
   preferredContactMethod: "phone" | "text" | "email" | "";
   notes: string;
+  employmentStatus: "employed" | "unemployed" | "self-employed" | "not-seeking" | "";
+  employerName: string;
+  monthlyRent: string;
+  currentInsurance: "none" | "private" | "medicaid" | "medicare" | "chip" | "";
+  childrenNames: string;
+  childDiagnosis: string;
+  heatingType: "gas" | "electric" | "both" | "";
+  lastUtilityBill: string;
 }
 
 export interface MatchResult {

@@ -459,8 +459,7 @@ export function ConversationGuide({
   function handleFieldChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
-    const nextValue = event.target.value;
-    onAnswer(step.key, normalizeInputValue(step.key, nextValue) as never);
+    onAnswer(step.key, event.target.value as never);
   }
 
   return (

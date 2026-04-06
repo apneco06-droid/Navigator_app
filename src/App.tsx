@@ -4,6 +4,7 @@ import { ConversationGuide } from "./components/ConversationGuide";
 import { OfficialFormDetails } from "./components/OfficialFormDetails";
 import { OfficialPdfDownloads } from "./components/OfficialPdfDownloads";
 import { PrintPacket } from "./components/PrintPacket";
+import { ProgramDetailIntake } from "./components/ProgramDetailIntake";
 import { ProgramMatches } from "./components/ProgramMatches";
 import { programs } from "./data/programs";
 import { useInstantSpeech } from "./hooks/useInstantSpeech";
@@ -56,11 +57,19 @@ const initialState: IntakeFormValue = {
   interpreterLanguage: "",
   preferredContactMethod: "",
   notes: "",
+  employmentStatus: "",
+  employerName: "",
+  monthlyRent: "",
+  currentInsurance: "",
+  childrenNames: "",
+  childDiagnosis: "",
+  heatingType: "",
+  lastUtilityBill: "",
 };
 
 function App() {
   const [intake, setIntake] = useState(initialState);
-  const [stage, setStage] = useState<"guide" | "results" | "apply">("guide");
+  const [stage, setStage] = useState<"guide" | "results" | "detail" | "apply">("guide");
   const [currentStep, setCurrentStep] = useState(0);
   const [printTarget, setPrintTarget] = useState<string | "all">("all");
   const { speak } = useInstantSpeech();
@@ -109,12 +118,22 @@ function App() {
     setCurrentStep((current) => Math.max(current - 1, 0));
   }
 
+  function handleGoToDetail() {
+    setStage("detail");
+    speak(
+      intake.language === "es"
+        ? "Primero necesito algunos detalles especificos para cada programa."
+        : "Let me ask a few more details specific to each program.",
+      intake.language,
+    );
+  }
+
   function handleStartApplication() {
     setStage("apply");
     speak(
       intake.language === "es"
-        ? "Voy a preparar los borradores de solicitud. Despues puedes elegir imprimir un PDF o continuar por la ruta oficial en linea."
-        : "I am preparing the application drafts. Next you can choose between a printable PDF and the official online route.",
+        ? "Tus solicitudes estan listas."
+        : "Your applications are ready.",
       intake.language,
     );
   }
@@ -162,12 +181,12 @@ function App() {
             <div className="apply-question">
               <h3>
                 {intake.language === "es"
-                  ? "Quieres que prepare las solicitudes ahora?"
-                  : "Would you like me to prepare the applications now?"}
+                  ? "Quieres continuar con las solicitudes?"
+                  : "Ready to build your applications?"}
               </h3>
               <div className="apply-actions">
-                <button className="primary-button" type="button" onClick={handleStartApplication}>
-                  {intake.language === "es" ? "Si, aplicar ahora" : "Yes, apply now"}
+                <button className="primary-button" type="button" onClick={handleGoToDetail}>
+                  {intake.language === "es" ? "Si, continuar" : "Yes, continue"}
                 </button>
                 <button className="secondary-button" type="button" onClick={() => setStage("guide")}>
                   {intake.language === "es" ? "Cambiar respuestas" : "Change answers"}
@@ -175,6 +194,16 @@ function App() {
               </div>
             </div>
           </section>
+        ) : null}
+
+        {stage === "detail" ? (
+          <ProgramDetailIntake
+            intake={intake}
+            matches={matches}
+            onChange={handleGuideAnswer}
+            onBack={() => setStage("results")}
+            onContinue={handleStartApplication}
+          />
         ) : null}
 
         {stage === "apply" ? (

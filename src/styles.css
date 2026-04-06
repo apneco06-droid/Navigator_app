@@ -203,6 +203,26 @@ small,
   gap: 12px;
 }
 
+.apply-submission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface-secondary, rgba(255,255,255,0.04));
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+}
+
+.apply-submission-info a {
+  color: var(--accent, #5ab4c5);
+  text-decoration: none;
+}
+
+.apply-submission-info a:hover {
+  text-decoration: underline;
+}
+
 .debug-toggle-row {
   margin-top: 12px;
 }
