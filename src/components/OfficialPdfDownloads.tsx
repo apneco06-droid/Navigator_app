@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MatchResult, IntakeForm as IntakeFormValue } from "../lib/matching";
 import {
   generateTexasH1010PdfPair,
+  generateTexasH0011Pdf,
 } from "../lib/officialTexasPdfs";
 
 interface OfficialPdfDownloadsProps {
@@ -46,13 +47,21 @@ const OTHER_FORMS: OtherForm[] = [
 ];
 
 export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingForm, setGeneratingForm] = useState<string | null>(null);
 
   const isSpanish = intake.language === "es";
 
   const texasMatches = matches.filter(({ program }) =>
     ["snap", "tanf", "medicaid", "chip", "htw"].includes(program.id),
   );
+
+  const snapMatches = matches.filter(({ program }) => program.id === "snap");
+
+  // H0011 (TSAP) is the shorter SNAP form for elderly (60+) or disabled-only households
+  const qualifiesForTsap =
+    snapMatches.length > 0 &&
+    (intake.ageBand === "65-plus" || intake.hasDisability) &&
+    intake.employmentStatus !== "employed";
 
   const matchedOtherForms = OTHER_FORMS.filter((form) =>
     matches.some(({ program }) => form.programIds.includes(program.id)),
@@ -64,12 +73,23 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
 
   async function handleDownloadH1010() {
     try {
-      setIsGenerating(true);
+      setGeneratingForm("h1010");
       const pair = await generateTexasH1010PdfPair(intake, texasMatches);
       const base = safeName(intake);
-      downloadPdf(pair.final, `${base}-texas-h1010-prefilled.pdf`);
+      downloadPdf(pair.final, `${base}-h1010-packet.pdf`);
     } finally {
-      setIsGenerating(false);
+      setGeneratingForm(null);
+    }
+  }
+
+  async function handleDownloadH0011() {
+    try {
+      setGeneratingForm("h0011");
+      const bytes = await generateTexasH0011Pdf(intake, snapMatches);
+      const base = safeName(intake);
+      downloadPdf(bytes, `${base}-h0011-tsap-packet.pdf`);
+    } finally {
+      setGeneratingForm(null);
     }
   }
 
@@ -77,11 +97,11 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
     <section className="panel mobile-panel">
       <div className="section-heading">
         <span className="eyebrow">{isSpanish ? "Formularios oficiales" : "Official forms"}</span>
-        <h2>{isSpanish ? "Descargar formularios" : "Download forms"}</h2>
+        <h2>{isSpanish ? "Descargar paquete de solicitud" : "Download application packet"}</h2>
         <p>
           {isSpanish
-            ? "Formularios prellenados con tus datos y enlaces a los documentos oficiales."
-            : "Pre-filled forms with your data, plus links to the official government documents."}
+            ? "Cada descarga incluye una hoja de referencia con tus datos prellenados, seguida del formulario oficial en blanco para completar y firmar."
+            : "Each download includes a pre-filled data reference sheet followed by the official blank form to complete and sign."}
         </p>
       </div>
 
@@ -90,45 +110,59 @@ export function OfficialPdfDownloads({ intake, matches }: OfficialPdfDownloadsPr
           <article className="apply-card">
             <div className="apply-card-header">
               <div>
-                <h3>{isSpanish ? "Solicitud H1010 — Texas" : "H1010 Application — Texas"}</h3>
-                <p>{isSpanish ? "SNAP · Medicaid · TANF · CHIP" : "SNAP · Medicaid · TANF · CHIP"}</p>
+                <h3>{isSpanish ? "Solicitud H1010 (July 2025)" : "H1010 Application (July 2025)"}</h3>
+                <p>SNAP, Medicaid, TANF, CHIP</p>
               </div>
-              <span className="category-pill">{isSpanish ? "PDF prellenado" : "Pre-filled PDF"}</span>
+              <span className="category-pill">{isSpanish ? "Paquete oficial" : "Full packet"}</span>
             </div>
 
             <p className="benefit-copy">
               {isSpanish
-                ? "Genera un PDF de dos páginas con todos tus datos ya llenados siguiendo la estructura del H1010 oficial."
-                : "Generates a 2-page PDF with all your data filled in, following the official H1010 structure."}
+                ? "El paquete contiene: (1) hoja de referencia de 2 paginas con todos tus datos prellenados, (2) pagina separadora con instrucciones, y (3) el formulario oficial H1010 completo de 34 paginas."
+                : "Packet contains: (1) 2-page pre-filled data sheet with all your answers, (2) separator page with instructions, and (3) the full official 34-page H1010 form to sign and submit."}
             </p>
-
-            <div className="apply-submission-info">
-              <p className="office-copy">
-                <strong>{isSpanish ? "Formulario oficial en blanco: " : "Official blank form: "}</strong>
-                <a
-                  href="https://yourtexasbenefits.com/Learn/GetPaperForm?lang=en_US"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  yourtexasbenefits.com
-                </a>
-                {" — "}
-                {isSpanish
-                  ? 'busca "Formulario para solicitar beneficios"'
-                  : 'look for "Form to apply for Food Benefits, Healthcare, or Cash help"'}
-              </p>
-            </div>
 
             <div className="apply-card-actions">
               <button
                 type="button"
                 className="primary-button"
                 onClick={handleDownloadH1010}
-                disabled={isGenerating}
+                disabled={generatingForm !== null}
               >
-                {isGenerating
-                  ? isSpanish ? "Generando PDF..." : "Generating PDF..."
-                  : isSpanish ? "Descargar H1010 prellenado" : "Download pre-filled H1010"}
+                {generatingForm === "h1010"
+                  ? isSpanish ? "Generando paquete..." : "Building packet..."
+                  : isSpanish ? "Descargar paquete H1010" : "Download H1010 packet"}
+              </button>
+            </div>
+          </article>
+        )}
+
+        {qualifiesForTsap && (
+          <article className="apply-card">
+            <div className="apply-card-header">
+              <div>
+                <h3>{isSpanish ? "Solicitud simplificada H0011 (TSAP)" : "Simplified SNAP H0011 (TSAP)"}</h3>
+                <p>{isSpanish ? "Solo beneficios de alimentos SNAP" : "SNAP food benefits only"}</p>
+              </div>
+              <span className="category-pill">{isSpanish ? "Formulario corto" : "Short form"}</span>
+            </div>
+
+            <p className="benefit-copy">
+              {isSpanish
+                ? "Formulario abreviado para hogares donde todos son mayores de 60 anos o reciben pagos por discapacidad y no tienen ingresos laborales."
+                : "Shorter form for households where everyone is 60+ or receives disability payments and has no earned income."}
+            </p>
+
+            <div className="apply-card-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleDownloadH0011}
+                disabled={generatingForm !== null}
+              >
+                {generatingForm === "h0011"
+                  ? isSpanish ? "Generando paquete..." : "Building packet..."
+                  : isSpanish ? "Descargar paquete H0011 (TSAP)" : "Download H0011 (TSAP) packet"}
               </button>
             </div>
           </article>

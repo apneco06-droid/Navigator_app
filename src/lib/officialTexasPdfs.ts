@@ -451,6 +451,82 @@ function buildPage2(s: Sheet, d: H1010Data) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// OFFICIAL FORM LOADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Attempts to load an official HHSC PDF form from the /forms/ path.
+ * XFA data is stripped by pdf-lib; the static visual background survives.
+ * Returns null silently if the file cannot be fetched.
+ */
+async function loadOfficialForm(path: string): Promise<PDFDocument | null> {
+  try {
+    const res = await fetch(path);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    return await PDFDocument.load(new Uint8Array(buf));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Draws a separator page between the data sheet and the blank official form.
+ */
+async function addSeparatorPage(
+  doc: PDFDocument,
+  formTitle: string,
+  formId: string,
+  instruction: string,
+): Promise<void> {
+  const reg  = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([PAGE_W, PAGE_H]);
+
+  // Blue band
+  page.drawRectangle({ x: 0, y: PAGE_H - 80, width: PAGE_W, height: 80, color: ACCENT });
+  page.drawText("OFFICIAL FORM - " + formId, {
+    x: MARGIN, y: PAGE_H - 28, size: 10, font: bold, color: WHITE,
+  });
+  page.drawText(formTitle, {
+    x: MARGIN, y: PAGE_H - 46, size: 14, font: bold, color: WHITE,
+  });
+  page.drawText("Texas Health and Human Services Commission (HHSC)", {
+    x: MARGIN, y: PAGE_H - 62, size: 8, font: reg, color: rgb(0.8, 0.9, 1),
+  });
+
+  // Center body
+  const bodyY = PAGE_H / 2 + 60;
+  page.drawText(instruction, {
+    x: MARGIN, y: bodyY, size: 11, font: reg, color: DARK,
+    maxWidth: COL_W,
+  });
+
+  const steps = [
+    "1. Print this entire packet.",
+    "2. Review the pre-filled data sheet (the pages before this divider).",
+    "3. Fill in the official form pages that follow using your data sheet as a guide.",
+    "4. Sign and date where required on the official form.",
+    "5. Submit to HHSC by mail, fax, in person, or at YourTexasBenefits.com.",
+  ];
+  let y = bodyY - 32;
+  for (const step of steps) {
+    page.drawText(step, { x: MARGIN, y, size: 10, font: reg, color: BLACK, maxWidth: COL_W });
+    y -= 18;
+  }
+
+  // Box at bottom
+  const boxY = MARGIN + 10;
+  page.drawRectangle({ x: MARGIN, y: boxY, width: COL_W, height: 46, borderColor: ACCENT, borderWidth: 1 });
+  page.drawText("YourTexasBenefits.com  |  Call 2-1-1  |  Fax: 1-877-447-2839", {
+    x: MARGIN + 10, y: boxY + 28, size: 9, font: bold, color: ACCENT,
+  });
+  page.drawText("Mail: HHSC, PO Box 149024, Austin, TX 78714-9968", {
+    x: MARGIN + 10, y: boxY + 12, size: 9, font: reg, color: DARK,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC API
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -461,8 +537,10 @@ export interface PdfPair {
 }
 
 /**
- * Generates a pre-filled H1010 data reference PDF (2 pages).
- * Both H1010 and H1010-MR data are included in the same document.
+ * Generates the full H1010 application packet:
+ *   - 2-page pre-filled data reference sheet (all intake data)
+ *   - Separator / instruction page
+ *   - Official blank H1010 form pages (July 2025, static visual background)
  */
 export async function generateTexasH1010Pdf(
   intake: IntakeForm,
@@ -475,17 +553,94 @@ export async function generateTexasH1010PdfPair(
   intake: IntakeForm,
   matches: MatchResult[],
 ): Promise<PdfPair> {
-  const data   = extractData(intake, matches);
-  const doc    = await PDFDocument.create();
-  const reg    = await doc.embedFont(StandardFonts.Helvetica);
-  const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
-  const sheet  = new Sheet(doc, reg, bold);
+  const data = extractData(intake, matches);
+  const doc  = await PDFDocument.create();
+  const reg  = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const sheet = new Sheet(doc, reg, bold);
 
+  // ── 1. Pre-filled data reference (2 pages) ──────────────────────────────────
   buildPage1(sheet, data);
   buildPage2(sheet, data);
 
+  // ── 2. Try to append official H1010 (July 2025) blank pages ─────────────────
+  const formDoc = await loadOfficialForm("/forms/H1010.pdf");
+  if (formDoc && formDoc.getPageCount() > 0) {
+    await addSeparatorPage(
+      doc,
+      "Texas Works Application for Assistance",
+      "H1010",
+      "The following pages are the official blank Form H1010 (July 2025). " +
+      "Fill in these pages by hand using your pre-filled data sheet as a guide, then sign and submit.",
+    );
+    const count = formDoc.getPageCount();
+    const indices = Array.from({ length: count }, (_, i) => i);
+    const copied = await doc.copyPages(formDoc, indices);
+    for (const p of copied) doc.addPage(p);
+  }
+
   const bytes = await doc.save();
   return { final: bytes, preview: bytes };
+}
+
+/**
+ * Generates the simplified SNAP packet (H0011 — for elderly or disabled
+ * households with no earned income).
+ */
+export async function generateTexasH0011Pdf(
+  intake: IntakeForm,
+  matches: MatchResult[],
+): Promise<Uint8Array> {
+  const data  = extractData(intake, matches);
+  const doc   = await PDFDocument.create();
+  const reg   = await doc.embedFont(StandardFonts.Helvetica);
+  const bold  = await doc.embedFont(StandardFonts.HelveticaBold);
+  const sheet = new Sheet(doc, reg, bold);
+
+  // Re-use same data sheet with TSAP title
+  sheet.drawDocHeader(
+    "Pre-filled Application Data - Form H0011 (TSAP)",
+    "Texas Simplified Application Project  |  SNAP Food Benefits",
+  );
+  sheet.sectionHead("Applicant Information");
+  sheet.field("First name",   data.firstName,   MARGIN,                COL_W * 0.38);
+  sheet.field("Middle name",  data.middleName,  MARGIN + COL_W * 0.40, COL_W * 0.20);
+  sheet.field("Last name",    data.lastName,    MARGIN + COL_W * 0.62, COL_W * 0.38);
+  sheet.rowEnd(3);
+  sheet.field("Home address", data.address,   MARGIN,                COL_W * 0.55);
+  sheet.field("City",         data.city,      MARGIN + COL_W * 0.57, COL_W * 0.20);
+  sheet.field("State",        data.stateAbbr, MARGIN + COL_W * 0.79, COL_W * 0.08);
+  sheet.field("ZIP",          data.zipCode,   MARGIN + COL_W * 0.89, COL_W * 0.11);
+  sheet.rowEnd(4);
+  sheet.field("Phone number", data.phone, MARGIN, COL_W * 0.38);
+  sheet.field("County",       data.county, MARGIN + COL_W * 0.40, COL_W * 0.38);
+  sheet.rowEnd(2);
+  sheet.sectionHead("Household Income & Assets");
+  sheet.field("Est. monthly gross income",     data.estimatedMonthlyIncome, MARGIN,                COL_W * 0.38);
+  sheet.field("Number of people in household", data.householdSize,          MARGIN + COL_W * 0.40, COL_W * 0.38);
+  sheet.rowEnd(2);
+  sheet.yesno("Does anyone in the home have money in the bank or cash?", false);
+  sheet.yesno("Does anyone expect to receive money this month?",         false);
+  sheet.yesno("Does anyone pay costs for housing and utilities?",        !!(data.estimatedHousing));
+  sheet.drawFooter("TSAP data reference");
+
+  // Append official H0011 blank form
+  const formDoc = await loadOfficialForm("/forms/H0011.pdf");
+  if (formDoc && formDoc.getPageCount() > 0) {
+    await addSeparatorPage(
+      doc,
+      "Texas Simplified Application Project (TSAP)",
+      "H0011",
+      "The following pages are the official blank Form H0011 (July 2025) for SNAP benefits. " +
+      "This shorter form is for households where everyone is 60+ or receives disability payments.",
+    );
+    const count = formDoc.getPageCount();
+    const copied = await doc.copyPages(formDoc, Array.from({ length: count }, (_, i) => i));
+    for (const p of copied) doc.addPage(p);
+  }
+
+  const bytes = await doc.save();
+  return bytes;
 }
 
 /** Generates the H1010-MR addendum data sheet (included in main packet above). */
