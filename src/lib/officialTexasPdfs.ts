@@ -221,7 +221,7 @@ class Sheet {
     // Label (tiny, in top-left of box)
     this.text(label, x + 3, y - 3, 6.5, this.reg, MUTED);
     // Value
-    const display = value.trim() || "—";
+    const display = value.trim() || "(blank)";
     const color   = value.trim() ? BLACK : LIGHT;
     this.text(display, x + 3, y - 13, 9, this.reg, color);
   }
@@ -231,13 +231,18 @@ class Sheet {
     this.down(26);
   }
 
+  /** Draw a filled inner square to represent a checked state (WinAnsi-safe). */
+  private filledCheck(bx: number, by: number) {
+    this.page.drawRectangle({ x: bx + 2, y: by + 2, width: 6, height: 6, color: ACCENT });
+  }
+
   /** Checkbox row — label + yes/no marks. */
   yesno(label: string, value: boolean) {
     this.needsPage(16);
     const y = this.cursor;
     const box = (checked: boolean, bx: number) => {
       this.page.drawRectangle({ x: bx, y: y - 10, width: 10, height: 10, borderColor: DARK, borderWidth: 0.6 });
-      if (checked) this.text("✓", bx + 1, y - 9, 8, this.bold, ACCENT);
+      if (checked) this.filledCheck(bx, y - 10);
     };
     box(value,  MARGIN);
     box(!value, MARGIN + 20);
@@ -252,7 +257,7 @@ class Sheet {
     this.needsPage(16);
     const y = this.cursor;
     this.page.drawRectangle({ x: MARGIN, y: y - 10, width: 10, height: 10, borderColor: DARK, borderWidth: 0.6 });
-    if (checked) this.text("✓", MARGIN + 1, y - 9, 8, this.bold, ACCENT);
+    if (checked) this.filledCheck(MARGIN, y - 10);
     this.text(label, MARGIN + 16, y - 8, 9, this.reg, checked ? BLACK : MUTED);
     this.down(16);
   }
@@ -263,7 +268,7 @@ class Sheet {
     const y = this.cursor;
     this.page.drawRectangle({ x: MARGIN, y: y - 36, width: COL_W, height: 38, borderColor: LIGHT, borderWidth: 0.6 });
     this.text(label, MARGIN + 3, y - 3, 6.5, this.reg, MUTED);
-    this.text(value.trim() || "—", MARGIN + 3, y - 14, 9, this.reg, value.trim() ? BLACK : LIGHT);
+    this.text(value.trim() || "(blank)", MARGIN + 3, y - 14, 9, this.reg, value.trim() ? BLACK : LIGHT);
     this.down(44);
   }
 
@@ -272,7 +277,7 @@ class Sheet {
     const y = MARGIN - 14;
     this.rule(0.3, rgb(0.8, 0.8, 0.8));
     this.page.drawLine({ start: { x: MARGIN, y: y + 4 }, end: { x: PAGE_W - MARGIN, y: y + 4 }, thickness: 0.3, color: LIGHT });
-    this.text("Form H1010 — Pre-filled Data Reference", MARGIN, y - 2, 7, this.reg, MUTED);
+    this.text("Form H1010 - Pre-filled Data Reference", MARGIN, y - 2, 7, this.reg, MUTED);
     this.text(pageLabel, PAGE_W - MARGIN - 40, y - 2, 7, this.reg, MUTED);
     this.text("Bring this sheet to the HHSC office or attach to the blank official H1010 form.", MARGIN, y - 12, 7, this.reg, MUTED);
   }
@@ -284,18 +289,18 @@ class Sheet {
 
 function buildPage1(s: Sheet, d: H1010Data) {
   s.drawDocHeader(
-    "Pre-filled Application Data — Form H1010",
-    "Texas Works Application for Assistance · SNAP · Medicaid · TANF · CHIP",
+    "Pre-filled Application Data - Form H1010",
+    "Texas Works Application for Assistance  |  SNAP, Medicaid, TANF, CHIP",
   );
 
-  // ── Benefits requested ────────────────────────────────────────────────────
-  s.sectionHead("Benefits Requested — Check all that apply");
+  // Benefits requested
+  s.sectionHead("Benefits Requested - Check all that apply");
   s.checkbox("SNAP food benefits", d.applySnap);
   s.checkbox("TANF cash help for families", d.applyTanf);
   s.checkbox("CHIP (Children's Health Insurance Program)", d.applyChip);
-  s.checkbox("Medicaid — children under 19", d.applyMedicaidChildren);
-  s.checkbox("Medicaid — adult (not caring for a child)", d.applyMedicaidAdult);
-  s.checkbox("Medicaid — pregnant or postpartum", d.isPregnantForBenefits);
+  s.checkbox("Medicaid - children under 19", d.applyMedicaidChildren);
+  s.checkbox("Medicaid - adult (not caring for a child)", d.applyMedicaidAdult);
+  s.checkbox("Medicaid - pregnant or postpartum", d.isPregnantForBenefits);
   s.down(4);
 
   // ── Applicant identification ───────────────────────────────────────────────
@@ -347,7 +352,7 @@ function buildPage2(s: Sheet, d: H1010Data) {
   // Blue page header
   s.page.drawRectangle({ x: 0, y: PAGE_H - 40, width: PAGE_W, height: 40, color: ACCENT });
   s.text("TEXAS HEALTH AND HUMAN SERVICES COMMISSION", MARGIN, PAGE_H - 16, 7.5, s.bold, WHITE);
-  s.text("Form H1010 — Pre-filled Data Reference (continued)", MARGIN, PAGE_H - 30, 10, s.bold, WHITE);
+  s.text("Form H1010 - Pre-filled Data Reference (continued)", MARGIN, PAGE_H - 30, 10, s.bold, WHITE);
   s.cursor = PAGE_H - 52;
   s.down(6);
 
@@ -369,7 +374,7 @@ function buildPage2(s: Sheet, d: H1010Data) {
     s.memo("Special interview assistance details", d.interviewHelpDetails);
   }
 
-  s.field("Preferred contact method", d.preferredContactMethod || "—", MARGIN, COL_W * 0.46);
+  s.field("Preferred contact method", d.preferredContactMethod || "not specified", MARGIN, COL_W * 0.46);
   s.rowEnd(1);
   s.down(4);
 
@@ -516,8 +521,8 @@ function formatSsn(value: string): string {
 function incomeLabel(band: IntakeForm["monthlyIncomeBand"]): string {
   const map: Record<string, string> = {
     "under-1000": "Under $1,000",
-    "1000-2000":  "$1,000 – $2,000",
-    "2000-3500":  "$2,000 – $3,500",
+    "1000-2000":  "$1,000 to $2,000",
+    "2000-3500":  "$2,000 to $3,500",
     "3500-plus":  "$3,500+",
   };
   return map[band] ?? "";
